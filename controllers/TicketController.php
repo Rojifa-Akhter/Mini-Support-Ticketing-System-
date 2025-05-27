@@ -17,33 +17,51 @@ class TicketController
     {
         $input = json_decode(file_get_contents('php://input'), true);
         if (! isset($input['title'], $input['description'], $input['department_id'])) {
-            ResponseHelper::json(['error' => 'Missing fields'], 400);
+            ResponseHelper::json(['status' => false, 'error' => 'Missing fields'], 400);
         }
 
         // Create ticket
         $ticket = Ticket::create($input['title'], $input['description'], $this->user->id, $input['department_id']);
-        ResponseHelper::json(['message' => 'Ticket created', 'ticket' => $ticket]);
+        ResponseHelper::json(['status' => true, 'message' => 'Ticket created', 'ticket' => $ticket]);
     }
 
     public function addNote($ticket_id)
     {
         $input = json_decode(file_get_contents('php://input'), true);
         if (! isset($input['note'])) {
-            ResponseHelper::json(['error' => 'Note is required'], 400);
+            ResponseHelper::json(['status' => false, 'error' => 'Note is required'], 400);
         }
 
         // Verify ticket exists
         $ticket = Ticket::findById($ticket_id);
         if (! $ticket) {
-            ResponseHelper::json(['error' => 'Ticket not found'], 404);
+            ResponseHelper::json(['status' => false, 'error' => 'Ticket not found'], 404);
         }
 
         // Add note
         $success = TicketNote::addNote($ticket_id, $this->user->id, $input['note']);
         if ($success) {
-            ResponseHelper::json(['message' => 'Note added']);
+            ResponseHelper::json(['status' => true, 'message' => 'Note added']);
         } else {
-            ResponseHelper::json(['error' => 'Failed to add note'], 500);
+            ResponseHelper::json(['status' => false, 'error' => 'Failed to add note'], 500);
+        }
+    }
+    public function assignAgent($ticket_id)
+    {
+        if ($this->user->role !== 'agent') {
+            ResponseHelper::json(['status' => false, 'error' => 'Only agents can assign tickets'], 403);
+        }
+
+        $ticket = Ticket::findById($ticket_id);
+        if (! $ticket) {
+            ResponseHelper::json(['status' => false, 'error' => 'Ticket not found'], 404);
+        }
+
+        $success = Ticket::assignToAgent($ticket_id, $this->user->id);
+        if ($success) {
+            ResponseHelper::json(['status' => true, 'message' => 'Ticket assigned']);
+        } else {
+            ResponseHelper::json(['status' => false, 'error' => 'Failed to assign ticket'], 500);
         }
     }
 
@@ -51,25 +69,25 @@ class TicketController
     {
         $input = json_decode(file_get_contents('php://input'), true);
         if (! isset($input['status'])) {
-            ResponseHelper::json(['error' => 'Status is required'], 400);
+            ResponseHelper::json(['status' => false, 'error' => 'Status is required'], 400);
         }
         $allowed = ['open', 'in_progress', 'closed'];
         if (! in_array($input['status'], $allowed)) {
-            ResponseHelper::json(['error' => 'Invalid status'], 400);
+            ResponseHelper::json(['status' => false, 'error' => 'Invalid status'], 400);
         }
 
         $ticket = Ticket::findById($ticket_id);
         if (! $ticket) {
-            ResponseHelper::json(['error' => 'Ticket not found'], 404);
+            ResponseHelper::json(['status' => false, 'error' => 'Ticket not found'], 401);
         }
 
-        // Here you can add permission checks (e.g., only agents can update status)
+        // only agents can update status)
 
         $success = Ticket::updateStatus($ticket_id, $input['status']);
         if ($success) {
-            ResponseHelper::json(['message' => 'Status updated']);
+            ResponseHelper::json(['status' => true, 'message' => 'Status updated']);
         } else {
-            ResponseHelper::json(['error' => 'Failed to update status'], 500);
+            ResponseHelper::json(['status' => false, 'error' => 'Failed to update status'], 500);
         }
     }
 }

@@ -2,25 +2,35 @@
 // models/Ticket.php
 require_once __DIR__ . '/../config.php';
 
-class Ticket {
+class Ticket
+{
     public $id, $title, $description, $status, $user_id, $department_id, $created_at;
 
-    public static function create($title, $description, $user_id, $department_id) {
-        $db = Database::getInstance()->getConnection();
+    public static function create($title, $description, $user_id, $department_id)
+    {
+        $db   = Database::getInstance()->getConnection();
         $stmt = $db->prepare("INSERT INTO tickets (title, description, user_id, department_id) VALUES (?, ?, ?, ?)");
         $stmt->execute([$title, $description, $user_id, $department_id]);
         return self::findById($db->lastInsertId());
     }
 
-    public static function findById($id) {
-        $db = Database::getInstance()->getConnection();
+    public static function findById($id)
+    {
+        $db   = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT * FROM tickets WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
+    public static function assignToAgent($ticket_id, $agent_id)
+    {
+        $db   = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("UPDATE tickets SET agent_id = ? WHERE id = ?");
+        return $stmt->execute([$agent_id, $ticket_id]);
+    }
 
-    public static function updateStatus($id, $status) {
-        $db = Database::getInstance()->getConnection();
+    public static function updateStatus($id, $status)
+    {
+        $db   = Database::getInstance()->getConnection();
         $stmt = $db->prepare("UPDATE tickets SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $id]);
     }

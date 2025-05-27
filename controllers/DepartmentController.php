@@ -3,56 +3,63 @@
 require_once __DIR__ . '/../models/Department.php';
 require_once __DIR__ . '/../helpers/ResponseHelper.php';
 
-class DepartmentController {
+class DepartmentController
+{
     private $user;
 
-    public function __construct($user) {
+    public function __construct($user)
+    {
         $this->user = $user;
     }
 
-    private function authorizeAdmin() {
+    private function authorizeAdmin()
+    {
         if ($this->user->role !== 'admin') {
-            ResponseHelper::json(['error' => 'Only admins allowed'], 403);
+            ResponseHelper::json(['status' => false, 'error' => 'Only admins allowed'], 403);
         }
     }
 
-    public function index() {
+    public function index()
+    {
         $departments = Department::all();
-        ResponseHelper::json($departments);
+        ResponseHelper::json(['status' => true, 'data' => $departments]);
     }
 
-    public function create() {
+    public function create()
+    {
         $this->authorizeAdmin();
         $input = json_decode(file_get_contents('php://input'), true);
-        if (!isset($input['name'])) {
-            ResponseHelper::json(['error' => 'Name required'], 400);
+        if (! isset($input['name'])) {
+            ResponseHelper::json(['status' => false, 'error' => 'Name required'], 400);
         }
 
         $department = Department::create($input['name']);
-        ResponseHelper::json(['message' => 'Department created', 'department' => $department]);
+        ResponseHelper::json(['status' => true, 'message' => 'Department created', 'department' => $department]);
     }
 
-    public function update($id) {
+    public function update($id)
+    {
         $this->authorizeAdmin();
         $input = json_decode(file_get_contents('php://input'), true);
-        if (!isset($input['name'])) {
-            ResponseHelper::json(['error' => 'Name required'], 400);
+        if (! isset($input['name'])) {
+            ResponseHelper::json(['status' => false, 'error' => 'Name required'], 400);
         }
         $success = Department::update($id, $input['name']);
         if ($success) {
-            ResponseHelper::json(['message' => 'Department updated']);
+            ResponseHelper::json(['status' => true, 'message' => 'Department updated']);
         } else {
-            ResponseHelper::json(['error' => 'Update failed'], 500);
+            ResponseHelper::json(['status' => false, 'error' => 'Update failed : ID not Found'], 500);
         }
     }
 
-    public function delete($id) {
+    public function delete($id)
+    {
         $this->authorizeAdmin();
         $success = Department::delete($id);
         if ($success) {
-            ResponseHelper::json(['message' => 'Department deleted']);
+            ResponseHelper::json(['status' => true, 'message' => 'Department deleted']);
         } else {
-            ResponseHelper::json(['error' => 'Delete failed'], 500);
+            ResponseHelper::json(['status' => false, 'error' => 'Delete failed: ID not found'], 404);
         }
     }
 }

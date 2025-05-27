@@ -10,8 +10,7 @@ header('Content-Type: application/json');
 
 $uri = str_replace('/support-system/public/index.php', '', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
-
-error_log("Parsed URI: $uri"); // for debug
+error_log("Parsed URI: $uri");
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -47,7 +46,7 @@ try {
 $user = $middleware->user;
 
 $departmentController = new DepartmentController($user);
-$ticketController = new TicketController($user);
+$ticketController     = new TicketController($user);
 
 // Departments routes
 if ($uri === '/api/departments') {
@@ -76,6 +75,11 @@ if ($uri === '/api/tickets' && $method === 'POST') {
     $ticketController->create();
     exit;
 }
+if (preg_match('#^/api/tickets/(\d+)/assign$#', $uri, $matches) && $method === 'PUT') {
+    $ticket_id = $matches[1];
+    $ticketController->assignAgent($ticket_id);
+}
+
 
 if (preg_match('#^/api/tickets/(\d+)/notes$#', $uri, $matches) && $method === 'POST') {
     $ticket_id = $matches[1];
@@ -90,5 +94,5 @@ if (preg_match('#^/api/tickets/(\d+)/status$#', $uri, $matches) && $method === '
 }
 
 http_response_code(404);
-echo json_encode(['error' => 'Endpoint not found']);
+echo json_encode(['status'=>false,'error' => 'Endpoint not found']);
 exit;

@@ -15,23 +15,23 @@ class AuthMiddleware {
     public function handle() {
         $headers = getallheaders();
         if (!isset($headers['Authorization'])) {
-            ResponseHelper::json(['error' => 'Authorization header missing'], 401);
+            ResponseHelper::json(['status'=>false,'error' => 'Authorization header missing'], 401);
         }
 
         $token = trim(str_replace('Bearer', '', $headers['Authorization']));
         if (!$token) {
-            ResponseHelper::json(['error' => 'Token missing'], 401);
+            ResponseHelper::json(['status'=>false,'error' => 'Token missing'], 401);
         }
 
         $userId = $this->tokenStore->getUserId($token);
         if (!$userId) {
-            ResponseHelper::json(['error' => 'Invalid token'], 401);
+            ResponseHelper::json(['status'=>false,'error' => 'Invalid token'], 401);
         }
 
         // Load user
         $user = User::findById($userId);
         if (!$user) {
-            ResponseHelper::json(['error' => 'User not found'], 401);
+            ResponseHelper::json(['status'=>false,'error' => 'User not found'], 401);
         }
 
         $this->user = $user;

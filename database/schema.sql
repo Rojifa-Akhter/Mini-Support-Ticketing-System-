@@ -17,11 +17,14 @@ CREATE TABLE tickets (
     description TEXT NOT NULL,
     status ENUM('open', 'in_progress', 'closed') DEFAULT 'open',
     user_id INT NOT NULL,
+    agent_id INT DEFAULT NULL,
     department_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(agent_id) REFERENCES users(id),
     FOREIGN KEY(department_id) REFERENCES departments(id)
 );
+
 
 CREATE TABLE ticket_notes (
     id INT AUTO_INCREMENT PRIMARY KEY,
